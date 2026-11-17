@@ -1,0 +1,49 @@
+code: "kali"
+name: "Kali Linux ARM64 XFCE"
+description: |
+  Kali Linux ARM64 with XFCE desktop, integrated terminal, and rootless PRoot runtime.
+preview: "https://www.kali.org/images/kali-logo.svg"
+webpage: "https://www.kali.org/docs/nethunter/nethunter-rootless/"
+feature:
+  - type: "audio"
+    name: "Audio Playback"
+    description: "Forward Linux desktop audio to Android."
+    enabled: true
+  - type: "microphone"
+    name: "Microphone Forwarding"
+    description: "Forward Android microphone audio into Kali."
+  - type: "avnc"
+    name: "Kali XFCE Desktop"
+    description: "Open the XFCE desktop in the integrated VNC frontend."
+    command: |
+      mkdir -p "$HOME/.vnc"
+      mkdir -p /run/dbus
+      dbus-daemon --system --fork 2>/dev/null || true
+      vncserver :6 -localhost yes -SecurityTypes None -geometry 1280x720 -depth 24
+    link: "vnc://127.0.0.1:5906"
+    enabled: true
+    adapt_to_screen_size: true
+    scale_ratio: 0
+  - type: "storage"
+    name: "External Storage"
+    description: "Mount Android shared storage when the user enables storage access."
+    enabled: false
+boot_command: >
+  $BIN_DIR/proot $EXTRA_ARGS -H --change-id=1000:1000 --pwd=/home/kali
+  --rootfs=$CONTAINER_DIR --sysvipc -L --link2symlink --kill-on-exit
+  --mount=/system --mount=/apex --mount=/sys
+  --mount=/proc --mount=/dev
+  --mount=$CACHE_DIR/tmp:/dev/shm
+  --mount=/dev/urandom:/dev/random
+  --mount=/proc/self/fd:/dev/fd
+  --mount=/proc/self/fd/0:/dev/stdin
+  --mount=/proc/self/fd/1:/dev/stdout
+  --mount=/proc/self/fd/2:/dev/stderr
+  --mount=$CACHE_DIR/tmp:/tmp
+  --mount=$CACHE_DIR/run:/run
+  /usr/bin/env -i HOSTNAME=KALI HOME=/home/kali USER=kali TERM=xterm-256color
+  DISPLAY=:6 LANG=en_US.UTF-8 SHELL=/bin/bash
+  PATH=/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:$EXTRA_PATH
+  LD_LIBRARY_PATH=$EXTRA_LD_LIBRARY_PATH
+  LD_PRELOAD=$EXTRA_LD_PRELOAD
+  $EXTRA_ENV /bin/bash -l
