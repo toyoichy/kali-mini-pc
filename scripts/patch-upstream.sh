@@ -11,7 +11,7 @@ root = Path(sys.argv[1])
 gradle = root / "app/build.gradle.kts"
 text = gradle.read_text()
 text = text.replace('applicationId = "com.fct.tc4"', 'applicationId = "com.toyoichy.kaliminipc"')
-text = text.replace('version = release(37)', 'version = release(36)')
+text = text.replace('version = release(37)', 'version = release(37)')
 text = text.replace('targetSdk = 37', 'targetSdk = 35')
 text = re.sub(r'versionCode = \d+', 'versionCode = 1', text)
 text = re.sub(r'versionName = "[^"]+"', 'versionName = "0.1.0-kali"', text)
