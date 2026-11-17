@@ -37,6 +37,8 @@ docker run --rm --privileged --platform linux/arm64 \
     mount --rbind /sys /mnt/rootfs/sys
     rm -f /mnt/rootfs/etc/resolv.conf
     cp /etc/resolv.conf /mnt/rootfs/etc/resolv.conf
+    mkdir -p /mnt/rootfs/tmp /mnt/rootfs/var/tmp
+    chmod 1777 /mnt/rootfs/tmp /mnt/rootfs/var/tmp
     chroot /mnt/rootfs /bin/bash -euc "
       export DEBIAN_FRONTEND=noninteractive
       apt-get update
