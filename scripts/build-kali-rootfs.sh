@@ -33,6 +33,7 @@ docker run --rm --privileged --platform linux/arm64 \
     mount -t proc proc /mnt/rootfs/proc
     mount --rbind /dev /mnt/rootfs/dev
     mount --rbind /sys /mnt/rootfs/sys
+    rm -f /mnt/rootfs/etc/resolv.conf
     cp /etc/resolv.conf /mnt/rootfs/etc/resolv.conf
     chroot /mnt/rootfs /bin/bash -euc "
       export DEBIAN_FRONTEND=noninteractive
