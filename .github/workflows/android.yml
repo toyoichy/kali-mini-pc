@@ -83,9 +83,14 @@ jobs:
       - name: Install Android SDK 37 and native build tools
         run: |
           sdkmanager "cmdline-tools;latest"
-          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort -V | tail -n 1)"
-          echo "Using SDK manager: $SDKMANAGER"
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -path '*/bin/sdkmanager' | while IFS= read -r tool; do
+            revision="$(sed -n 's/^Pkg.Revision=//p' "$(dirname "$tool")/../source.properties" 2>/dev/null | head -n 1)"
+            if [ -n "$revision" ]; then printf '%s\t%s\n' "$revision" "$tool"; fi
+          done | sort -V | tail -n 1 | cut -f2-)"
+          echo "Using newest SDK manager: $SDKMANAGER"
           test -x "$SDKMANAGER"
+          "$SDKMANAGER" --version
+          "$SDKMANAGER" --list --channel=3 | grep -E 'platforms;android-37|build-tools;37' || true
           "$SDKMANAGER" --channel=3 "platforms;android-37" "build-tools;37.0.0" "ndk;29.0.14206865" "cmake;3.22.1"
 
       - name: Set up Gradle
