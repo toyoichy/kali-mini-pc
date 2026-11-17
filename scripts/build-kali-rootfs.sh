@@ -40,8 +40,9 @@ docker run --rm --privileged --platform linux/arm64 \
       apt-get install -y --no-install-recommends \
         kali-linux-core xfce4 xfce4-terminal \
         tigervnc-standalone-server dbus-x11 sudo xterm
+      getent group 1000 >/dev/null 2>&1 || groupadd --gid 1000 kali
       if ! id kali >/dev/null 2>&1; then
-        useradd --create-home --uid 1000 --user-group --shell /bin/bash kali
+        useradd --create-home --uid 1000 --gid 1000 --shell /bin/bash kali
       else
         usermod --uid 1000 --gid 1000 --shell /bin/bash kali
       fi
