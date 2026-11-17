@@ -83,7 +83,10 @@ jobs:
       - name: Install Android SDK 37 and native build tools
         run: |
           sdkmanager "cmdline-tools;latest"
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --channel=3 "platforms;android-37" "build-tools;37.0.0" "ndk;29.0.14206865" "cmake;3.22.1"
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -mindepth 2 -maxdepth 2 -type f -path '*/bin/sdkmanager' | sort -V | tail -n 1)"
+          echo "Using SDK manager: $SDKMANAGER"
+          test -x "$SDKMANAGER"
+          "$SDKMANAGER" --channel=3 "platforms;android-37" "build-tools;37.0.0" "ndk;29.0.14206865" "cmake;3.22.1"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
