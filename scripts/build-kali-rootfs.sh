@@ -80,6 +80,6 @@ install -m 0644 scripts/kali.tiny.yaml "$ROOTFS_DIR/.tiny.yaml"
 
 echo "[6/7] Packaging rootfs (profile first for Tiny Container detection)"
 mkdir -p app/src/main/assets
-tar --zstd -cf app/src/main/assets/rootfs.tar.zst -C "$ROOTFS_DIR" .tiny.yaml .
+sudo tar --zstd -cf app/src/main/assets/rootfs.tar.zst -C "$ROOTFS_DIR" .
 echo "[7/7] Rootfs package ready"
 ls -lh app/src/main/assets/rootfs.tar.zst
