@@ -94,7 +94,7 @@ if ! sudo tar --zstd -tf "$ARCHIVE" | grep -Fxq '.tiny.yaml'; then
   sudo tar --zstd -tf "$ARCHIVE" | head -40 >&2
   exit 1
 fi
-if ! sudo tar --zstd -xOf "$ARCHIVE" .tiny.yaml | grep -Eq '^code:[[:space:]]*["]?kali["]?[[:space:]]*; then
+if ! sudo tar --zstd -xOf "$ARCHIVE" .tiny.yaml | grep -Fqx 'code: "kali"'; then
   echo "ERROR: .tiny.yaml is missing the expected Kali container code" >&2
   exit 1
 fi
