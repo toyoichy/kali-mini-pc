@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WORK_DIR="\${WORK_DIR:-$PWD/.work/kali-rootfs}"
+WORK_DIR="${WORK_DIR:-$PWD/.work/kali-rootfs}"
 ROOTFS_DIR="$WORK_DIR/rootfs"
 ARCHIVE_NAME="kali-nethunter-rootfs-minimal-arm64.tar.xz"
 BASE_URL="https://kali.download/nethunter-images/current/rootfs"
