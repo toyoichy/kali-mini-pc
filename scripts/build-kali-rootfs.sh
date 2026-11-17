@@ -78,8 +78,25 @@ EOF
 echo "[5/7] Adding Tiny Container Kali profile"
 install -m 0644 scripts/kali.tiny.yaml "$ROOTFS_DIR/.tiny.yaml"
 
-echo "[6/7] Packaging rootfs (profile first for Tiny Container detection)"
+echo "[6/7] Packaging rootfs with an exact .tiny.yaml archive path"
 mkdir -p app/src/main/assets
-sudo tar --zstd -cf app/src/main/assets/rootfs.tar.zst -C "$ROOTFS_DIR" .
-echo "[7/7] Rootfs package ready"
-ls -lh app/src/main/assets/rootfs.tar.zst
+ARCHIVE="$PWD/app/src/main/assets/rootfs.tar.zst"
+# GNU tar normally stores paths with a leading "./" when archiving ".".
+# Tiny Container extracts the profile by the exact member name ".tiny.yaml",
+# so normalize archive member names at creation time.
+sudo tar --zstd -cf "$ARCHIVE" \
+  --transform='s,^\./,,' \
+  -C "$ROOTFS_DIR" .
+
+echo "[7/7] Verifying the packaged Tiny Container profile"
+if ! sudo tar --zstd -tf "$ARCHIVE" | grep -Fxq '.tiny.yaml'; then
+  echo "ERROR: archive does not contain an exact .tiny.yaml entry" >&2
+  sudo tar --zstd -tf "$ARCHIVE" | head -40 >&2
+  exit 1
+fi
+if ! sudo tar --zstd -xOf "$ARCHIVE" .tiny.yaml | grep -Eq '^code:[[:space:]]*["]?kali["]?[[:space:]]*; then
+  echo "ERROR: .tiny.yaml is missing the expected Kali container code" >&2
+  exit 1
+fi
+echo "Verified: .tiny.yaml exists at the archive root and identifies code=kali"
+ls -lh "$ARCHIVE"
