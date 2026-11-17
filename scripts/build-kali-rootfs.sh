@@ -45,23 +45,17 @@ docker run --rm --privileged --platform linux/arm64 \
       apt-get install -y --no-install-recommends \
         kali-linux-core xfce4 xfce4-terminal \
         tigervnc-standalone-server dbus-x11 sudo xterm
-      if getent group 1000 >/dev/null 2>&1; then
-        PRIMARY_GROUP="\$(getent group 1000 | cut -d: -f1)"
-      else
+      if ! getent group 1000 >/dev/null 2>&1; then
         if getent group kali >/dev/null 2>&1; then
           groupmod --gid 1000 kali
         else
           groupadd --gid 1000 kali
         fi
-        PRIMARY_GROUP=kali
       fi
       if id kali >/dev/null 2>&1; then
-        usermod --uid 1000 --gid "\$PRIMARY_GROUP" --shell /bin/bash kali
-      elif getent passwd 1000 >/dev/null 2>&1; then
-        EXISTING_USER="\$(getent passwd 1000 | cut -d: -f1)"
-        usermod --login kali --home /home/kali --move-home --gid "\$PRIMARY_GROUP" --shell /bin/bash "\$EXISTING_USER"
+        usermod --uid 1000 --gid 1000 --shell /bin/bash kali
       else
-        useradd --create-home --uid 1000 --gid "\$PRIMARY_GROUP" --shell /bin/bash kali
+        useradd --create-home --uid 1000 --gid 1000 --shell /bin/bash kali
       fi
       mkdir -p /etc/sudoers.d /home/kali/.vnc
       printf \"kali ALL=(ALL:ALL) NOPASSWD:ALL\\\\n\" > /etc/sudoers.d/90-kali-mini-pc
