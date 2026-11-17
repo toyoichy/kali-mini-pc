@@ -2,13 +2,14 @@
 set -euo pipefail
 
 WORK_DIR="${WORK_DIR:-$PWD/.work/kali-rootfs}"
-ROOTFS_DIR="$WORK_DIR/rootfs"
+EXTRACT_DIR="$WORK_DIR/extract"
+ROOTFS_DIR="$EXTRACT_DIR/kali-arm64"
 ARCHIVE_NAME="kali-nethunter-rootfs-minimal-arm64.tar.xz"
 BASE_URL="https://kali.download/nethunter-images/current/rootfs"
 
 mkdir -p "$WORK_DIR"
-rm -rf "$ROOTFS_DIR"
-mkdir -p "$ROOTFS_DIR"
+rm -rf "$EXTRACT_DIR"
+mkdir -p "$EXTRACT_DIR"
 
 echo "[1/7] Downloading official Kali ARM64 minimal rootfs"
 curl --fail --location --retry 5 --retry-all-errors "$BASE_URL/$ARCHIVE_NAME" -o "$WORK_DIR/$ARCHIVE_NAME"
@@ -23,7 +24,8 @@ fi
 printf '%s  %s\n' "$EXPECTED" "$WORK_DIR/$ARCHIVE_NAME" | sha256sum --check -
 
 echo "[3/7] Extracting Kali rootfs"
-tar -xJf "$WORK_DIR/$ARCHIVE_NAME" -C "$ROOTFS_DIR" --no-same-owner
+tar -xJf "$WORK_DIR/$ARCHIVE_NAME" -C "$EXTRACT_DIR" --no-same-owner --exclude="kali-arm64/dev/*"
+mkdir -p "$ROOTFS_DIR/dev/pts" "$ROOTFS_DIR/dev/shm"
 
 echo "[4/7] Installing desktop packages in ARM64 chroot"
 docker run --rm --privileged --platform linux/arm64 \
