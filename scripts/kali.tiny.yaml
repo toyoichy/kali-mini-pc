@@ -14,13 +14,17 @@ feature:
     description: "Forward Android microphone audio into Kali."
   - type: "avnc"
     name: "Kali XFCE Desktop"
-    description: "Open the XFCE desktop in the integrated VNC frontend."
+    description: "Open the XFCE desktop in the integrated AVNC frontend."
     command: |
       mkdir -p "$HOME/.vnc"
-      mkdir -p /run/dbus
-      dbus-daemon --system --fork 2>/dev/null || true
-      vncserver :6 -localhost yes -SecurityTypes None -geometry 1280x720 -depth 24
+      Xtigervnc -geometry 1280x720 -ZlibLevel=0 -pn -rfbport -1
+      -SendPrimary=off -SetPrimary=off -FrameRate=60
+      -rfbunixpath /tmp/.tiny.vnc -alwaysshared -SecurityTypes=None
+      -desktop "Kali-Mini-PC" :6 +extension MIT-SHM > /dev/null 2>&1 &
+      while [ ! -S /tmp/.tiny.vnc ]; do sleep 0.1; done
+      startxfce4 > /dev/null 2>&1 &
     link: "vnc://127.0.0.1:5906"
+    use_unix_socket: true
     enabled: true
     adapt_to_screen_size: true
     scale_ratio: 0
@@ -29,21 +33,19 @@ feature:
     description: "Mount Android shared storage when the user enables storage access."
     enabled: false
 boot_command: >
-  $BIN_DIR/proot $EXTRA_ARGS -H --change-id=1000:1000 --pwd=/home/kali
-  --rootfs=$CONTAINER_DIR --sysvipc -L --link2symlink --kill-on-exit
-  --mount=/system --mount=/apex --mount=/sys
-  --mount=/proc --mount=/dev
-  --mount=$CACHE_DIR/tmp:/dev/shm
-  --mount=/dev/urandom:/dev/random
-  --mount=/proc/self/fd:/dev/fd
-  --mount=/proc/self/fd/0:/dev/stdin
-  --mount=/proc/self/fd/1:/dev/stdout
-  --mount=/proc/self/fd/2:/dev/stderr
-  --mount=$CACHE_DIR/tmp:/tmp
-  --mount=$CACHE_DIR/run:/run
-  /usr/bin/env -i HOSTNAME=KALI HOME=/home/kali USER=kali TERM=xterm-256color
-  DISPLAY=:6 LANG=en_US.UTF-8 SHELL=/bin/bash
-  PATH=/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:$EXTRA_PATH
-  LD_LIBRARY_PATH=$EXTRA_LD_LIBRARY_PATH
-  LD_PRELOAD=$EXTRA_LD_PRELOAD
+  $BIN_DIR/proot $EXTRA_ARGS -H --kill-on-exit --link2symlink --sysvipc
+  -L --change-id=1000:1000 --rootfs=$CONTAINER_DIR --cwd=/home/kali
+  --bind=/data --bind=/dev --bind=/proc --bind=/sys
+  --bind=/dev/urandom:/dev/random
+  --bind=/proc/self/fd:/dev/fd
+  --bind=/proc/self/fd/0:/dev/stdin
+  --bind=/proc/self/fd/1:/dev/stdout
+  --bind=/proc/self/fd/2:/dev/stderr
+  --bind=$CACHE_DIR/tmp:/dev/shm
+  --bind=$CACHE_DIR/tmp:/tmp
+  --bind=$CACHE_DIR/run:/run
+  /usr/bin/env -i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$EXTRA_PATH
+  LD_LIBRARY_PATH=$EXTRA_LD_LIBRARY_PATH LD_PRELOAD=$EXTRA_LD_PRELOAD
+  DISPLAY=:6 LANG=en_US.UTF-8
+  HOME=/home/kali USER=kali TERM=xterm-256color COLORTERM=truecolor
   $EXTRA_ENV /bin/bash -l
