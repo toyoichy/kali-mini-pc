@@ -8,7 +8,7 @@ feature:
   - type: "audio"
     name: "Audio Playback"
     description: "Forward Linux desktop audio to Android."
-    enabled: true
+    enabled: false
   - type: "microphone"
     name: "Microphone Forwarding"
     description: "Forward Android microphone audio into Kali."
