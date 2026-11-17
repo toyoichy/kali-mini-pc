@@ -1,13 +1,6 @@
 name: Android CI
 
 on:
-  push:
-    branches:
-      - main
-      - feat/tiny-container-kali-port
-  pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
