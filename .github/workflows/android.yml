@@ -1,38 +1,105 @@
 name: Android CI
+
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+      - feat/tiny-container-kali-port
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
   workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
-  build-debug:
-    runs-on: ubuntu-latest
+  kali-rootfs:
+    name: Build Kali ARM64 rootfs
+    runs-on: ubuntu-24.04
     steps:
-      - name: Checkout
+      - name: Checkout Kali Mini PC
         uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Install archive tools
+        run: sudo apt-get update && sudo apt-get install -y zstd xz-utils
+
+      - name: Build verified Kali rootfs
+        run: bash scripts/build-kali-rootfs.sh
+
+      - name: Upload Kali rootfs
+        uses: actions/upload-artifact@v4
+        with:
+          name: kali-rootfs-arm64
+          path: app/src/main/assets/rootfs.tar.zst
+          if-no-files-found: error
+          retention-days: 2
+
+  android-apk:
+    name: Build Kali Mini PC APK
+    needs: kali-rootfs
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Kali Mini PC
+        uses: actions/checkout@v4
+
+      - name: Download Kali rootfs
+        uses: actions/download-artifact@v4
+        with:
+          name: kali-rootfs-arm64
+          path: rootfs-artifact
+
+      - name: Clone pinned Tiny Container source
+        run: |
+          git clone https://github.com/Cateners/tiny_container.git upstream
+          git -C upstream checkout 2723327f00764215f6b4e06658788bb352089667
+
+      - name: Apply Kali Mini PC branding
+        run: |
+          bash scripts/patch-upstream.sh upstream
+          mkdir -p upstream/app/src/main/assets
+          cp rootfs-artifact/rootfs.tar.zst upstream/app/src/main/assets/rootfs.tar.zst
+
+      - name: Download matching Tiny Container ARM64 native libraries
+        run: |
+          curl --fail --location --retry 5 \
+            https://github.com/Cateners/tiny_container/releases/download/v4.2.2/jniLibs.zip \
+            -o /tmp/jniLibs.zip
+          mkdir -p upstream/app/src/main/jniLibs/arm64-v8a
+          unzip -q /tmp/jniLibs.zip -d upstream/app/src/main/jniLibs/arm64-v8a
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
+
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          packages: platform-tools
-      - name: Install Android platform
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Install Android SDK 37 and native build tools
+        run: |
+          sdkmanager "platforms;android-37" "build-tools;37.0.0" "ndk;29.0.14206865" "cmake;3.22.1"
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.9"
+
       - name: Build debug APK
-        run: gradle --no-daemon :app:assembleDebug
-      - name: Upload debug APK
+        working-directory: upstream
+        run: ./gradlew --no-daemon :app:assembleDebug
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: kali-mini-pc-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: upstream/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
+          retention-days: 14
