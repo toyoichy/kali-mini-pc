@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SOURCE_DIR="\${1:?Usage: patch-upstream.sh <tiny-container-source-dir>}"
+SOURCE_DIR="${1:?Usage: patch-upstream.sh <tiny-container-source-dir>}"
 python3 - "$SOURCE_DIR" <<'PY'
 from pathlib import Path
 import re
